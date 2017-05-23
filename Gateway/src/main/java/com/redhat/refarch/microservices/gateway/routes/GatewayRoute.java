@@ -31,7 +31,11 @@ public class GatewayRoute extends SpringRouteBuilder {
     @Override
     public void configure() throws Exception {
 
-        // error handler for all following routes
+        String salesUri = "http4://sales-service:8080?bridgeEndpoint=true";
+        String salesMethodUri = "http4://sales-service:8080/${headers.splat[0]}?bridgeEndpoint=true";
+        String productUri = "http4://product-service:8080/${headers.splat[0]}?bridgeEndpoint=true";
+        String productMethodUri = "http4://product-service:8080?bridgeEndpoint=true";
+
         errorHandler(defaultErrorHandler()
                 .allowRedeliveryWhileStopping(false)
                 .maximumRedeliveries(1)
@@ -41,46 +45,36 @@ public class GatewayRoute extends SpringRouteBuilder {
         // using spark-rest for 'splat' URI wildcard support
         restConfiguration().component("spark-rest").host("0.0.0.0").port(9091);
 
-        // Call to billing/process go to billing.orders.new messaging queue
         rest("/billing/process")
                 .post()
                 .route()
                     .to("amq:billing.orders.new?transferException=true&jmsMessageType=Text")
                     .wireTap("direct:warehouse");
 
-        // Call to billing/process go to billing.orders.refund messaging queue
         rest("/billing/refund")
                 .post()
-                .route()
                 .to("amq:billing.orders.refund?transferException=true&jmsMessageType=Text");
 
-        // 'customers' calls proxied to sales-service
-        String endpoint = "http4://sales-service?bridgeEndpoint=true";
         rest("/customers")
-                .get().toD(endpoint)
-                .post().toD(endpoint);
+                .get().toD(salesUri)
+                .post().toD(salesUri);
 
-        endpoint = "http4://sales-service/${headers.splat[0]}?bridgeEndpoint=true";
         rest("/customers/*")
-                .get().toD(endpoint)
-                .post().toD(endpoint)
-                .patch().toD(endpoint)
-                .delete().toD(endpoint);
+                .get().toD(salesMethodUri)
+                .post().toD(salesMethodUri)
+                .patch().toD(salesMethodUri)
+                .delete().toD(salesMethodUri);
 
-        // 'products' calls proxied to product-service
-        endpoint = "http4://product-service?bridgeEndpoint=true";
         rest ("/products")
-                .get().toD(endpoint)
-                .post().toD(endpoint);
+                .get().toD(productUri)
+                .post().toD(productUri);
 
-        endpoint = "http4://product-service/${headers.splat[0]}?bridgeEndpoint=true";
         rest ("/products/*")
-                .get().toD(endpoint)
-                .post().toD(endpoint);
+                .get().toD(productMethodUri)
+                .post().toD(productMethodUri);
 
         from("direct:warehouse")
                 .routeId("warehouseMsgGateway")
-                // filter failed transactions
                 .filter(simple("${bodyAs(String)} contains 'SUCCESS'"))
                 .inOnly("amq:topic:warehouse.orders?jmsMessageType=Text");
     }
