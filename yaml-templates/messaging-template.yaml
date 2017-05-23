@@ -43,13 +43,13 @@ objects:
         containers:
         - env:
           - name: APPLICATION_NAME
-            value: broker
+            value: ${APPLICATION_NAME}
           - name: IMAGE_STREAM_NAMESPACE
             value: openshift
           - name: AMQ_USER
-            value: mquser
+            value: ${AMQ_USER}
           - name: AMQ_PASSWORD
-            value: password
+            value: ${AMQ_PASSWORD}
           - name: AMQ_TRANSPORTS
             value: openwire
           - name: AMQ_QUEUES
@@ -204,3 +204,13 @@ objects:
     type: ClusterIP
   status:
     loadBalancer: {}
+parameters:
+  - name: APPLICATION_NAME
+    description: Application Name
+    value: broker
+  - name: AMQ_USER
+    description: A-MQ Username
+    value: mquser
+  - name: AMQ_PASSWORD
+    description: A-MQ Password
+    value: password
