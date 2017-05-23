@@ -71,6 +71,8 @@ public class GatewayRoute extends SpringRouteBuilder {
                 .get().toD(productsUri)
                 .post().toD(productsUri);
 
+        rest ("/products/reduce").post().toD(productsUri);
+
         rest ("/products/*")
                 .get().toD(productsUri)
                 .post().toD(productsUri);
