@@ -21,6 +21,7 @@ import org.codehaus.jettison.json.JSONObject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.StringWriter;
 import java.net.URISyntaxException;
 import java.util.*;
@@ -349,6 +350,8 @@ public class RestClient {
                     throw new HttpErrorException(response);
                 }
             } catch (Exception e) {
+                Logger.getLogger(RestClient.class.getName()).log(Level.SEVERE, e.getMessage());
+                Logger.getLogger(RestClient.class.getName()).log(Level.SEVERE, e.toString());
                 refundTransaction(jsonResponse.getInt("transactionNumber"));
                 request.setAttribute("errorMessage", "Insufficient inventory to fulfill order");
                 return;
