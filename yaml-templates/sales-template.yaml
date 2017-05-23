@@ -71,7 +71,7 @@ objects:
           - name: MYSQL_PASSWORD
             value: password
           - name: MYSQL_USER
-            value: product
+            value: sales 
           imagePullPolicy: IfNotPresent
           name: sales-service
           ports:
