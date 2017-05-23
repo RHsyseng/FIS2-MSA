@@ -107,6 +107,10 @@ objects:
       port: 8778
       protocol: TCP
       targetPort: 8778
+    - name: 9091-tcp
+      protocol: TCP
+      port: 9091
+      targetPort: 9091
     selector:
       app: gateway-service
       deploymentconfig: gateway-service
