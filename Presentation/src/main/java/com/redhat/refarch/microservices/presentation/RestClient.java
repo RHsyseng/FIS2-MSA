@@ -346,6 +346,7 @@ public class RestClient {
             List<OrderItem> orderItems = (List<OrderItem>) request.getSession().getAttribute("orderItems");
             try {
                 HttpResponse response = reduceInventory(orderItems);
+                logInfo("*** RESPONSE TO reduceInventory IS: " + response.getStatusLine().toString());
                 if (isError(response)) {
                     throw new HttpErrorException(response);
                 }
