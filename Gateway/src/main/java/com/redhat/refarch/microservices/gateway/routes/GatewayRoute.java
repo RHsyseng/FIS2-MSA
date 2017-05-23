@@ -55,7 +55,12 @@ public class GatewayRoute extends SpringRouteBuilder {
                 .to("amq:billing.orders.refund?transferException=true&jmsMessageType=Text");
 
         // 'customers' calls proxied to sales-service
-        String endpoint = "http4://sales-service/${headers.splat[0]}?bridgeEndpoint=true";
+        String endpoint = "http4://sales-service?bridgeEndpoint=true";
+        rest("/customers")
+                .get().toD(endpoint)
+                .post().toD(endpoint);
+
+        endpoint = "http4://sales-service/${headers.splat[0]}?bridgeEndpoint=true";
         rest("/customers/*")
                 .get().toD(endpoint)
                 .post().toD(endpoint)
@@ -63,6 +68,11 @@ public class GatewayRoute extends SpringRouteBuilder {
                 .delete().toD(endpoint);
 
         // 'products' calls proxied to product-service
+        endpoint = "http4://product-service?bridgeEndpoint=true";
+        rest ("/products")
+                .get().toD(endpoint)
+                .post().toD(endpoint);
+
         endpoint = "http4://product-service/${headers.splat[0]}?bridgeEndpoint=true";
         rest ("/products/*")
                 .get().toD(endpoint)
