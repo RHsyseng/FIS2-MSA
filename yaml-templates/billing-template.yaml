@@ -69,9 +69,9 @@ objects:
         containers:
         - env:
           - name: ACTIVEMQ_BROKER_PASSWORD
-            value: ${AMQ_USER}
-          - name: ACTIVEMQ_BROKER_USERNAME
             value: ${AMQ_PASSWORD}
+          - name: ACTIVEMQ_BROKER_USERNAME
+            value: ${AMQ_USER}
           - name: ACTIVEMQ_SERVICE_HOST
             value: broker-amq-tcp
           - name: ACTIVEMQ_SERVICE_PORT
