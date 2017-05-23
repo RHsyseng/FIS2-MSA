@@ -31,10 +31,10 @@ public class GatewayRoute extends SpringRouteBuilder {
     @Override
     public void configure() throws Exception {
 
-        String salesUri = "http4://sales-service:8080?bridgeEndpoint=true";
-        String salesMethodUri = "http4://sales-service:8080/${headers.splat[0]}?bridgeEndpoint=true";
-        String productUri = "http4://product-service:8080?bridgeEndpoint=true";
-        String productMethodUri = "http4://product-service:8080/${headers.splat[0]}?bridgeEndpoint=true";
+        String salesUri = "http4://sales-service:8080/customers?bridgeEndpoint=true";
+        String salesMethodUri = "http4://sales-service:8080/customers/${headers.splat[0]}?bridgeEndpoint=true";
+        String productUri = "http4://product-service:8080/products?bridgeEndpoint=true";
+        String productMethodUri = "http4://product-service:8080/products/${headers.splat[0]}?bridgeEndpoint=true";
 
         errorHandler(defaultErrorHandler()
                 .allowRedeliveryWhileStopping(false)
