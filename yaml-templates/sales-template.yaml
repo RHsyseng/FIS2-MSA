@@ -47,7 +47,7 @@ objects:
     - annotations: null
       from:
         kind: DockerImage
-        name: ${DOCKER_HOST}:${DOCKER_PORT}/${PROJECT_NAME}/sales-service:latest
+        name: sales-service:latest
       name: latest
 - apiVersion: v1
   kind: DeploymentConfig
@@ -71,7 +71,7 @@ objects:
           - name: MYSQL_PASSWORD
             value: password
           - name: MYSQL_USER
-            value: sales 
+            value: sales
           imagePullPolicy: IfNotPresent
           name: sales-service
           ports:
@@ -90,7 +90,6 @@ objects:
         from:
           kind: ImageStreamTag
           name: sales-service:latest
-          namespace: ${PROJECT_NAME}
       type: ImageChange
 - apiVersion: v1
   kind: Service
@@ -115,13 +114,3 @@ objects:
     selector:
       app: sales-service
       deploymentconfig: sales-service
-parameters:
-  - name: DOCKER_HOST
-    description: Docker Registry Host IP
-    value: 172.30.206.185
-  - name: DOCKER_PORT
-    description: Docker Registry Host Port
-    value: "5000"
-  - name: PROJECT_NAME
-    description: OpenShift Parent Project Name
-    value: fis2-msa

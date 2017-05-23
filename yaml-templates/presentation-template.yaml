@@ -47,7 +47,7 @@ objects:
     - annotations: null
       from:
         kind: DockerImage
-        name: ${DOCKER_HOST}:${DOCKER_PORT}/${PROJECT_NAME}/presentation:latest
+        name: presentation:latest
       name: latest
 - apiVersion: v1
   kind: DeploymentConfig
@@ -85,7 +85,6 @@ objects:
         from:
           kind: ImageStreamTag
           name: presentation:latest
-          namespace: ${PROJECT_NAME}
       type: ImageChange
 - apiVersion: v1
   kind: Service
@@ -127,15 +126,6 @@ objects:
       weight: 100
     wildcardPolicy: None
 parameters:
-  - name: DOCKER_HOST
-    description: Docker Registry Host IP
-    value: 172.30.206.185
-  - name: DOCKER_PORT
-    description: Docker Registry Host Port
-    value: "5000"
-  - name: PROJECT_NAME
-    description: OpenShift Parent Project Name
-    value: fis2-msa
   - name: ROUTE_URL
     description: Route Address for Presentation
     value: presentation.bxms.ose
