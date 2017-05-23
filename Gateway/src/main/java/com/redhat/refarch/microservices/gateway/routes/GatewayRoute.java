@@ -15,7 +15,9 @@
  */
 package com.redhat.refarch.microservices.gateway.routes;
 
+import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
+import org.apache.camel.Processor;
 import org.apache.camel.spring.SpringRouteBuilder;
 import org.springframework.stereotype.Component;
 
@@ -31,16 +33,14 @@ public class GatewayRoute extends SpringRouteBuilder {
     @Override
     public void configure() throws Exception {
 
-        String salesUri = "http4://sales-service:8080/customers?bridgeEndpoint=true";
-        String salesMethodUri = "http4://sales-service:8080/customers/${headers.splat[0]}?bridgeEndpoint=true";
-        String productUri = "http4://product-service:8080/products?bridgeEndpoint=true";
-        String productMethodUri = "http4://product-service:8080/products/${headers.splat[0]}?bridgeEndpoint=true";
-
         errorHandler(defaultErrorHandler()
                 .allowRedeliveryWhileStopping(false)
                 .maximumRedeliveries(1)
                 .redeliveryDelay(3000)
                 .retryAttemptedLogLevel(LoggingLevel.WARN));
+
+        String customersUri = "http4://sales-service:8080/customers/?bridgeEndpoint=true";
+        String productsUri = "http4://product-service:8080/products/?bridgeEndpoint=true";
 
         // using spark-rest for 'splat' URI wildcard support
         restConfiguration().component("spark-rest").host("0.0.0.0").port(9091);
@@ -56,22 +56,22 @@ public class GatewayRoute extends SpringRouteBuilder {
                 .to("amq:billing.orders.refund?transferException=true&jmsMessageType=Text");
 
         rest("/customers")
-                .get().toD(salesUri)
-                .post().toD(salesUri);
+                .get().toD(customersUri)
+                .post().to(customersUri);
 
         rest("/customers/*")
-                .get().toD(salesMethodUri)
-                .post().toD(salesMethodUri)
-                .patch().toD(salesMethodUri)
-                .delete().toD(salesMethodUri);
+                .get().toD(customersUri)
+                .post().toD(customersUri)
+                .patch().toD(customersUri)
+                .delete().toD(customersUri);
 
         rest ("/products")
-                .get().toD(productUri)
-                .post().toD(productUri);
+                .get().toD(productsUri)
+                .post().toD(productsUri);
 
         rest ("/products/*")
-                .get().toD(productMethodUri)
-                .post().toD(productMethodUri);
+                .get().toD(productsUri)
+                .post().toD(productsUri);
 
         from("direct:warehouse")
                 .routeId("warehouseMsgGateway")
