@@ -69,9 +69,9 @@ objects:
         containers:
         - env:
           - name: MYSQL_PASSWORD
-            value: password
+            value: ${MYSQL_PASSWORD}
           - name: MYSQL_USER
-            value: product
+            value: ${MYSQL_USER}
           imagePullPolicy: IfNotPresent
           name: product-service
           ports:
@@ -114,3 +114,10 @@ objects:
     selector:
       app: product-service
       deploymentconfig: product-service
+parameters:
+  - name: MYSQL_USER
+    description: MYSQL Username
+    value: product
+  - name: MYSQL_PASSWORD
+    description: MYSQL password
+    value: password
