@@ -1,5 +1,16 @@
 package com.redhat.refarch.microservices.product.service;
 
+import com.redhat.refarch.microservices.product.model.Error;
+import com.redhat.refarch.microservices.product.model.Inventory;
+import com.redhat.refarch.microservices.product.model.Keyword;
+import com.redhat.refarch.microservices.product.model.Product;
+import com.redhat.refarch.microservices.utils.Utils;
+
+import javax.ejb.LocalBean;
+import javax.ejb.Stateless;
+import javax.persistence.*;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -11,32 +22,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.ejb.LocalBean;
-import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.*;
-
-import com.redhat.refarch.microservices.product.model.Error;
-import com.redhat.refarch.microservices.product.model.Inventory;
-import com.redhat.refarch.microservices.product.model.Keyword;
-import com.redhat.refarch.microservices.product.model.Product;
-import com.redhat.refarch.microservices.utils.Utils;
-import com.sun.deploy.net.HttpResponse;
 
 @Path("/products")
 @Stateless
