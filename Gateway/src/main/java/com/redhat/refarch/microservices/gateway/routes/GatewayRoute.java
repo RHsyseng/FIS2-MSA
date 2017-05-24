@@ -49,9 +49,7 @@ public class GatewayRoute extends SpringRouteBuilder {
                 .post()
                 .route()
                     .to("amq:billing.orders.new?transferException=true&jmsMessageType=Text")
-                    .wireTap("direct:warehouse")
-                    .log(LoggingLevel.INFO, "after wiretap...")
-                    .to("log:INFO?showBody=true&showHeaders=true");
+                    .wireTap("direct:warehouse");
 
         rest("/billing/refund/*")
                 .post()
