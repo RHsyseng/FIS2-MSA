@@ -45,7 +45,7 @@ public class WarehouseService {
                 + "/orders/" + result.getOrderNumber());
         HttpPatch patch = new HttpPatch(uriBuilder.build());
         patch.setEntity(new StringEntity(jsonObject.toString(), ContentType.APPLICATION_JSON));
-        logInfo("Waiting 5 seconds to signify warehouse processing delay" + patch);
+        logInfo("Waiting 5 seconds to simulate a symbolic warehouse processing delay...");
         Thread.sleep(5000);
         logInfo("Executing " + patch);
         HttpResponse response = client.execute(patch);
