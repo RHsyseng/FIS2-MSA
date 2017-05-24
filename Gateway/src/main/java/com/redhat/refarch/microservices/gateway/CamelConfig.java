@@ -50,24 +50,4 @@ public class CamelConfig extends CamelConfiguration {
             public void afterApplicationStart(CamelContext context) {}
         };
     }
-
-    @Bean
-    public List<String> uriTemplates() {
-        return Arrays.asList(
-                "/products/classify/{sku}",
-                "/products/keywords",
-                "/products/reduce",
-                "/products/{sku}",
-                "/products/",
-                "/billing/process",
-                "/billing/refund",
-                "/customers/{customerId}/orders/{orderId}/orderItems/{orderItemId}",
-                "/customers/{customerId}/orders/{orderId}/orderItems",
-                "/customers/{customerId}/orders/{orderId}",
-                "/customers/{customerId}/orders",
-                "/customers/authenticate",
-                "/customers/{id}",
-                "/customers/"
-        );
-    }
 }
