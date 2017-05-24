@@ -29,16 +29,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.*;
 
 import com.redhat.refarch.microservices.product.model.Error;
 import com.redhat.refarch.microservices.product.model.Inventory;
 import com.redhat.refarch.microservices.product.model.Keyword;
 import com.redhat.refarch.microservices.product.model.Product;
 import com.redhat.refarch.microservices.utils.Utils;
+import com.sun.deploy.net.HttpResponse;
 
 @Path("/products")
 @Stateless
@@ -240,7 +238,7 @@ public class ProductService
 	@Path("/reduce")
 	@Consumes({"application/json", "application/xml"})
 	@Produces({"application/json", "application/xml"})
-	public void reduceInventory(Inventory[] inventoryAdjustment)
+	public Response reduceInventory(Inventory[] inventoryAdjustment)
 	{
 		try
 		{
@@ -267,14 +265,11 @@ public class ProductService
 				}
 			}
 		}
-		catch( WebApplicationException e )
-		{
-			throw e;
-		}
 		catch( RuntimeException e )
 		{
 			throw new Error( HttpURLConnection.HTTP_INTERNAL_ERROR, e ).asException();
 		}
+		return Response.ok().build();
 	}
 
 	@Target({ElementType.METHOD})
