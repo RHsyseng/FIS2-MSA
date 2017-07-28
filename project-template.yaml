@@ -13,35 +13,35 @@ objects:
   metadata:
     annotations: {}
     labels:
-      app: fis2-mvn-injected-openshift
+      app: mvn-base-img
       group: build
-      project: fis2-mvn-injected-openshift
+      project: mvn-base-img
       version: 1.0.0
-    name: fis2-mvn-injected-openshift
+    name: mvn-base-img
   spec:
-    dockerImageRepository: "${REGISTRY}:5000/${IS_PULL_NAMESPACE}/fis2-mvn-injected-openshift"
+    dockerImageRepository: "${REGISTRY}:5000/${IS_PULL_NAMESPACE}/mvn-base-img"
     tags:
     - annotations:
         tags: "${IS_TAG}"
       from:
         kind: ImageStreamTag
-        name: fis2-mvn-injected-openshift
+        name: mvn-base-img
       name: "${IS_TAG}"
 - apiVersion: v1
   kind: BuildConfig
   metadata:
     annotations: {}
     labels:
-      app: fis2-mvn-injected-openshift
+      app: mvn-base-img
       group: build
-      project: fis2-mvn-injected-openshift
+      project: mvn-base-img
       version: 1.0.0
-    name: fis2-mvn-injected-openshift
+    name: mvn-base-img
   spec:
     output:
       to:
         kind: ImageStreamTag
-        name: fis2-mvn-injected-openshift:${IS_TAG}
+        name: mvn-base-img:${IS_TAG}
     source:
       git:
         uri: https://github.com/jeremyary/fis2-mvn-injected-template.git
@@ -56,8 +56,14 @@ objects:
           name: fis-java-openshift:2.0
           namespace: openshift
         env:
-          - name: "PROJECT_REPO"
-            value: "${GIT_URL}"
+          - name: "GIT_USER"
+            value: "RHsyseng"
+          - name: "GIT_PROJECT"
+            value: "FIS2-MSA"
+          - name: "GIT_RELEASE"
+            value: "1.0"
+            - name: "GIT_TARBALL"
+            value: "fis2-ecom-services.tar.gz"
         incremental: false
       type: Docker
     triggers:
@@ -463,7 +469,7 @@ objects:
       sourceStrategy:
         from:
           kind: ImageStreamTag
-          name: fis2-mvn-injected-openshift:latest
+          name: mvn-base-img:latest
           namespace: ecom-services
         env:
           - name: MAVEN_ARGS_APPEND
@@ -595,7 +601,7 @@ objects:
       sourceStrategy:
         from:
           kind: ImageStreamTag
-          name: fis2-mvn-injected-openshift:latest
+          name: mvn-base-img:latest
           namespace: ecom-services
         env:
           - name: MAVEN_ARGS_APPEND
@@ -727,7 +733,7 @@ objects:
       sourceStrategy:
         from:
           kind: ImageStreamTag
-          name: fis2-mvn-injected-openshift:latest
+          name: mvn-base-img:latest
           namespace: ecom-services
         env:
           - name: MAVEN_ARGS_APPEND
@@ -859,7 +865,7 @@ objects:
       sourceStrategy:
         from:
           kind: ImageStreamTag
-          name: fis2-mvn-injected-openshift:latest
+          name: mvn-base-img:latest
           namespace: ecom-services
         env:
           - name: MAVEN_ARGS_APPEND
@@ -1004,7 +1010,7 @@ objects:
       sourceStrategy:
         from:
           kind: ImageStreamTag
-          name: fis2-mvn-injected-openshift:latest
+          name: mvn-base-img:latest
           namespace: ecom-services
         env:
           - name: MAVEN_ARGS_APPEND
@@ -1136,7 +1142,7 @@ objects:
       sourceStrategy:
         from:
           kind: ImageStreamTag
-          name: fis2-mvn-injected-openshift:latest
+          name: mvn-base-img:latest
           namespace: ecom-services
         env:
           - name: MAVEN_ARGS_APPEND
@@ -1255,8 +1261,6 @@ parameters:
     value: 172.30.37.138
   - name: IS_PULL_NAMESPACE
     value: openshift
-  - name: GIT_URL
-    value: https://github.com/jeremyary/fis2-ecom-injected-services.git
   - name: APPLICATION_NAME
     description: Application Name
     value: broker
