@@ -62,7 +62,7 @@ objects:
             value: "FIS2-MSA"
           - name: "GIT_RELEASE"
             value: "1.0"
-            - name: "GIT_TARBALL"
+          - name: "GIT_TARBALL"
             value: "fis2-ecom-services.tar.gz"
         incremental: false
       type: Docker
