@@ -1,0 +1,1295 @@
+apiVersion: v1
+kind: Template
+labels: {}
+metadata:
+  annotations:
+    description: Template for setting up ecom-services OpenShift project
+  labels:
+    app: ecom-services
+  name: ecom-services
+objects:
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations: {}
+    labels:
+      app: fis2-mvn-injected-openshift
+      group: build
+      project: fis2-mvn-injected-openshift
+      version: 1.0.0
+    name: fis2-mvn-injected-openshift
+  spec:
+    dockerImageRepository: "${REGISTRY}:5000/${IS_PULL_NAMESPACE}/fis2-mvn-injected-openshift"
+    tags:
+    - annotations:
+        tags: "${IS_TAG}"
+      from:
+        kind: ImageStreamTag
+        name: fis2-mvn-injected-openshift
+      name: "${IS_TAG}"
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations: {}
+    labels:
+      app: fis2-mvn-injected-openshift
+      group: build
+      project: fis2-mvn-injected-openshift
+      version: 1.0.0
+    name: fis2-mvn-injected-openshift
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: fis2-mvn-injected-openshift:${IS_TAG}
+    source:
+      git:
+        uri: https://github.com/jeremyary/fis2-mvn-injected-template.git
+      images: []
+      secrets: []
+      type: Git
+    strategy:
+      dockerStrategy:
+        noCache: true
+        from:
+          kind: ImageStreamTag
+          name: fis-java-openshift:2.0
+          namespace: openshift
+        env:
+          - name: "PROJECT_REPO"
+            value: "${GIT_URL}"
+        incremental: false
+      type: Docker
+    triggers:
+    - imageChange:
+      type: ImageChange
+- apiVersion: v1
+  kind: ServiceAccount
+  name: mqserviceaccount
+  metadata:
+    name: mqserviceaccount
+- apiVersion: v1
+  kind: RoleBinding
+  metadata:
+    name: mqserviceaccount-view-role
+  roleRef:
+    name: view
+  subjects:
+  - kind: ServiceAccount
+    name: mqserviceaccount
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: amq62-basic
+      application: broker
+      template: amq62-basic
+      xpaas: 1.3.1
+    name: broker-amq
+  spec:
+    replicas: 1
+    selector:
+      deploymentConfig: broker-amq
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: amq62-basic
+          application: broker
+          deploymentConfig: broker-amq
+        name: broker-amq
+      spec:
+        containers:
+        - env:
+          - name: APPLICATION_NAME
+            value: ${APPLICATION_NAME}
+          - name: IMAGE_STREAM_NAMESPACE
+            value: openshift
+          - name: AMQ_USER
+            value: ${AMQ_USER}
+          - name: AMQ_PASSWORD
+            value: ${AMQ_PASSWORD}
+          - name: AMQ_TRANSPORTS
+            value: openwire
+          - name: AMQ_QUEUES
+          - name: AMQ_TOPICS
+          - name: MQ_SERIALIZABLE_PACKAGES
+          - name: AMQ_MESH_DISCOVERY_TYPE
+            value: kube
+          - name: AMQ_MESH_SERVICE_NAME
+            value: broker-amq-tcp
+          - name: AMQ_MESH_SERVICE_NAMESPACE
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+          - name: AMQ_STORAGE_USAGE_LIMIT
+            value: 100 gb
+          imagePullPolicy: IfNotPresent
+          name: broker-amq
+          ports:
+          - containerPort: 8778
+            name: jolokia
+            protocol: TCP
+          - containerPort: 5672
+            name: amqp
+            protocol: TCP
+          - containerPort: 1883
+            name: mqtt
+            protocol: TCP
+          - containerPort: 61613
+            name: stomp
+            protocol: TCP
+          - containerPort: 61616
+            name: tcp
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - /opt/amq/bin/readinessProbe.sh
+            failureThreshold: 3
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+        serviceAccount: mqserviceaccount
+        serviceAccountName: mqserviceaccount
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - broker-amq
+        from:
+          kind: ImageStreamTag
+          name: jboss-amq-62:1.3
+          namespace: openshift
+      type: ImageChange
+    - type: ConfigChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      description: The broker's MQTT port.
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    labels:
+      app: amq62-basic
+      application: broker
+      template: amq62-basic
+      xpaas: 1.3.1
+    name: broker-amq-mqtt
+  spec:
+    ports:
+    - port: 1883
+      protocol: TCP
+      targetPort: 1883
+    selector:
+      deploymentConfig: broker-amq
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      description: The broker's STOMP port.
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    labels:
+      app: amq62-basic
+      application: broker
+      template: amq62-basic
+      xpaas: 1.3.1
+    name: broker-amq-stomp
+  spec:
+    ports:
+    - port: 61613
+      protocol: TCP
+      targetPort: 61613
+    selector:
+      deploymentConfig: broker-amq
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      description: The broker's OpenWire port.
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    labels:
+      app: amq62-basic
+      application: broker
+      template: amq62-basic
+      xpaas: 1.3.1
+    name: broker-amq-tcp
+  spec:
+    ports:
+    - port: 61616
+      protocol: TCP
+      targetPort: 61616
+    selector:
+      deploymentConfig: broker-amq
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      description: The broker's AMQP port.
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    labels:
+      app: amq62-basic
+      application: broker
+      template: amq62-basic
+      xpaas: 1.3.1
+    name: broker-amq-amqp
+  spec:
+    ports:
+    - port: 5672
+      protocol: TCP
+      targetPort: 5672
+    selector:
+      deploymentConfig: broker-amq
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      description: The broker's ingress service.
+      openshift.io/generated-by: OpenShiftNewApp
+      service.alpha.openshift.io/dependencies: '[{"name":"broker-amq-amqp","namespace":"","kind":"Service"},{"name":"broker-amq-stomp","namespace":"","kind":"Service"},{"name":"broker-amq-mqtt","namespace":"","kind":"Service"},{"name":"broker-amq-tcp","namespace":"","kind":"Service"}]'
+    labels:
+      app: amq62-basic
+      template: amq62-basic
+    name: broker-amq-ingress
+  spec:
+    ports:
+    - nodePort: 30616
+      port: 61616
+      protocol: TCP
+      targetPort: 61616
+    selector:
+      deploymentConfig: broker-amq
+    sessionAffinity: None
+    type: LoadBalancer
+- apiVersion: v1
+  kind: Route
+  metadata:
+    name: broker-amq-ingress
+    namespace: ecom-services
+    labels:
+      app: amq62-basic
+      template: amq62-basic
+  spec:
+    host: ${AMQ_ROUTE}
+    to:
+      kind: Service
+      name: broker-amq-ingress
+      weight: 100
+    wildcardPolicy: None
+- apiVersion: v1
+  data:
+    database-admin-password: cGFzc3dvcmQ=
+    database-password: cGFzc3dvcmQ=
+    database-user: bW9uZ291c2Vy
+  kind: Secret
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: mongodb-ephemeral
+      template: mongodb-ephemeral-template
+    name: mongodb
+  type: Opaque
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    name: mongodb
+    labels:
+      app: mongodb-ephemeral
+      template: mongodb-ephemeral-template
+  spec:
+    replicas: 1
+    selector:
+      name: mongodb
+    template:
+      metadata:
+        labels:
+          name: mongodb
+      spec:
+        containers:
+        - env:
+          - name: MONGODB_USER
+            valueFrom:
+              secretKeyRef:
+                key: database-user
+                name: mongodb
+          - name: MONGODB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: database-password
+                name: mongodb
+          - name: MONGODB_ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: database-admin-password
+                name: mongodb
+          - name: MONGODB_DATABASE
+            value: ecom
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            successThreshold: 1
+            tcpSocket:
+              port: 27017
+            timeoutSeconds: 1
+          name: mongodb
+          ports:
+          - containerPort: 27017
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - /bin/sh
+              - -i
+              - -c
+              - mongo 127.0.0.1:27017/$MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD --eval="quit()"
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              memory: 512Mi
+          volumeMounts:
+          - mountPath: /var/lib/mongodb/data
+            name: mongodb-data
+        volumes:
+          - name: mongodb-data
+            emptyDir: {}
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - mongodb
+        from:
+          kind: ImageStreamTag
+          name: mongodb:3.2
+          namespace: openshift
+      type: ImageChange
+    - type: ConfigChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: mongodb-ephemeral
+      template: mongodb-ephemeral-template
+    name: mongodb
+  spec:
+    ports:
+    - name: mongo
+      port: 27017
+      protocol: TCP
+      targetPort: 27017
+    selector:
+      name: mongodb
+    sessionAffinity: None
+    type: ClusterIP
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      service.alpha.openshift.io/dependencies: '[{"name":"mongodb","namespace":"","kind":"Service"}]'
+    labels:
+      app: mongodb-ephemeral
+      template: mongodb-ephemeral-template
+    name: mongo-ingress
+  spec:
+    ports:
+    - nodePort: 30918
+      port: 27017
+      protocol: TCP
+      targetPort: 27017
+    selector:
+      name: mongodb
+    sessionAffinity: None
+    type: LoadBalancer
+- apiVersion: v1
+  kind: Route
+  metadata:
+    name: mongo-ingress
+    namespace: ecom-services
+    labels:
+      app: mongodb-ephemeral
+      template: mongodb-ephemeral-template
+  spec:
+    host: ${MONGO_ROUTE}
+    to:
+      kind: Service
+      name: mongo-ingress
+      weight: 100
+    wildcardPolicy: None
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      app: product-service
+    name: product-service
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: product-service:latest
+    source:
+      contextDir: Product
+      git:
+        uri: ${GIT_URL}
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: fis2-mvn-injected-openshift:latest
+          namespace: ecom-services
+        env:
+          - name: MAVEN_ARGS_APPEND
+            value: '-B'
+      type: Source
+    triggers:
+    - github:
+        secret: MxjIZoWLfY9ySgCEc5mo
+      type: GitHub
+    - generic:
+        secret: 2Qs5dlAL3FQGSlp5huoa
+      type: Generic
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: product-service
+    name: product-service
+  spec:
+    tags:
+    - annotations: null
+      from:
+        kind: DockerImage
+        name: product-service:latest
+      name: latest
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: product-service
+    name: product-service
+  spec:
+    replicas: 1
+    selector:
+      app: product-service
+      deploymentconfig: product-service
+    template:
+      metadata:
+        labels:
+          app: product-service
+          deploymentconfig: product-service
+      spec:
+        containers:
+        - env:
+          - name: ACTIVEMQ_BROKER_PASSWORD
+            value: ${AMQ_PASSWORD}
+          - name: ACTIVEMQ_BROKER_USERNAME
+            value: ${AMQ_USER}
+          - name: ACTIVEMQ_SERVICE_HOST
+            value: broker-amq-tcp
+          - name: ACTIVEMQ_SERVICE_PORT
+            value: "61616"
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            successThreshold: 1
+            httpGet:
+              path: /health
+              port: 8081
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            httpGet:
+              path: /health
+              port: 8081
+            timeoutSeconds: 1
+          name: product-service
+          ports:
+          - containerPort: 8778
+            name: jolokia
+            protocol: TCP
+          - containerPort: 8081
+            name: health
+            protocol: TCP
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - product-service
+        from:
+          kind: ImageStreamTag
+          name: product-service:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: product-service
+    name: product-service
+  spec:
+    ports:
+    - name: jolokia
+      port: 8778
+      protocol: TCP
+      targetPort: 8778
+    - name: health
+      port: 8081
+      protocol: TCP
+      targetPort: 8081
+    selector:
+      app: product-service
+      deploymentconfig: product-service
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      app: sales-service
+    name: sales-service
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: sales-service:latest
+    source:
+      contextDir: Sales
+      git:
+        uri: ${GIT_URL}
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: fis2-mvn-injected-openshift:latest
+          namespace: ecom-services
+        env:
+          - name: MAVEN_ARGS_APPEND
+            value: '-B'
+      type: Source
+    triggers:
+    - github:
+        secret: MxjIZoWLfY9ySgCEc5mo
+      type: GitHub
+    - generic:
+        secret: 2Qs5dlAL3FQGSlp5huoa
+      type: Generic
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: sales-service
+    name: sales-service
+  spec:
+    tags:
+    - annotations: null
+      from:
+        kind: DockerImage
+        name: sales-service:latest
+      name: latest
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: sales-service
+    name: sales-service
+  spec:
+    replicas: 1
+    selector:
+      app: sales-service
+      deploymentconfig: sales-service
+    template:
+      metadata:
+        labels:
+          app: sales-service
+          deploymentconfig: sales-service
+      spec:
+        containers:
+        - env:
+          - name: ACTIVEMQ_BROKER_PASSWORD
+            value: ${AMQ_PASSWORD}
+          - name: ACTIVEMQ_BROKER_USERNAME
+            value: ${AMQ_USER}
+          - name: ACTIVEMQ_SERVICE_HOST
+            value: broker-amq-tcp
+          - name: ACTIVEMQ_SERVICE_PORT
+            value: "61616"
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            successThreshold: 1
+            httpGet:
+              path: /health
+              port: 8081
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            httpGet:
+              path: /health
+              port: 8081
+            timeoutSeconds: 1
+          name: sales-service
+          ports:
+          - containerPort: 8778
+            name: jolokia
+            protocol: TCP
+          - containerPort: 8081
+            name: health
+            protocol: TCP
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - sales-service
+        from:
+          kind: ImageStreamTag
+          name: sales-service:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: sales-service
+    name: sales-service
+  spec:
+    ports:
+    - name: jolokia
+      port: 8778
+      protocol: TCP
+      targetPort: 8778
+    - name: health
+      port: 8081
+      protocol: TCP
+      targetPort: 8081
+    selector:
+      app: sales-service
+      deploymentconfig: sales-service
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      app: billing-service
+    name: billing-service
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: billing-service:latest
+    source:
+      contextDir: Billing
+      git:
+        uri: ${GIT_URL}
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: fis2-mvn-injected-openshift:latest
+          namespace: ecom-services
+        env:
+          - name: MAVEN_ARGS_APPEND
+            value: '-B'
+      type: Source
+    triggers:
+    - github:
+        secret: MxjIZoWLfY9ySgCEc5mo
+      type: GitHub
+    - generic:
+        secret: 2Qs5dlAL3FQGSlp5huoa
+      type: Generic
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: billing-service
+    name: billing-service
+  spec:
+    tags:
+    - annotations: null
+      from:
+        kind: DockerImage
+        name: billing-service:latest
+      name: latest
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: billing-service
+    name: billing-service
+  spec:
+    replicas: 1
+    selector:
+      app: billing-service
+      deploymentconfig: billing-service
+    template:
+      metadata:
+        labels:
+          app: billing-service
+          deploymentconfig: billing-service
+      spec:
+        containers:
+        - env:
+          - name: ACTIVEMQ_BROKER_PASSWORD
+            value: ${AMQ_PASSWORD}
+          - name: ACTIVEMQ_BROKER_USERNAME
+            value: ${AMQ_USER}
+          - name: ACTIVEMQ_SERVICE_HOST
+            value: broker-amq-tcp
+          - name: ACTIVEMQ_SERVICE_PORT
+            value: "61616"
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            successThreshold: 1
+            httpGet:
+              path: /health
+              port: 8081
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            httpGet:
+              path: /health
+              port: 8081
+            timeoutSeconds: 1
+          name: billing-service
+          ports:
+          - containerPort: 8778
+            name: jolokia
+            protocol: TCP
+          - containerPort: 8081
+            name: health
+            protocol: TCP
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - billing-service
+        from:
+          kind: ImageStreamTag
+          name: billing-service:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: billing-service
+    name: billing-service
+  spec:
+    ports:
+    - name: jolokia
+      port: 8778
+      protocol: TCP
+      targetPort: 8778
+    - name: health
+      port: 8081
+      protocol: TCP
+      targetPort: 8081
+    selector:
+      app: billing-service
+      deploymentconfig: billing-service
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      app: gateway-service
+    name: gateway-service
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: gateway-service:latest
+    source:
+      contextDir: Gateway
+      git:
+        uri: ${GIT_URL}
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: fis2-mvn-injected-openshift:latest
+          namespace: ecom-services
+        env:
+          - name: MAVEN_ARGS_APPEND
+            value: '-B'
+      type: Source
+    triggers:
+    - github:
+        secret: MxjIZoWLfY9ySgCEc5mo
+      type: GitHub
+    - generic:
+        secret: 2Qs5dlAL3FQGSlp5huoa
+      type: Generic
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: gateway-service
+    name: gateway-service
+  spec:
+    tags:
+    - annotations: null
+      from:
+        kind: DockerImage
+        name: gateway-service:latest
+      name: latest
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: gateway-service
+    name: gateway-service
+  spec:
+    replicas: 1
+    selector:
+      app: gateway-service
+      deploymentconfig: gateway-service
+    template:
+      metadata:
+        labels:
+          app: gateway-service
+          deploymentconfig: gateway-service
+      spec:
+        containers:
+        - env:
+          - name: ACTIVEMQ_BROKER_PASSWORD
+            value: ${AMQ_PASSWORD}
+          - name: ACTIVEMQ_BROKER_USERNAME
+            value: ${AMQ_USER}
+          - name: ACTIVEMQ_SERVICE_HOST
+            value: broker-amq-tcp
+          - name: ACTIVEMQ_SERVICE_PORT
+            value: "61616"
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            successThreshold: 1
+            tcpSocket:
+              port: 9091
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            tcpSocket:
+              port: 9091
+            timeoutSeconds: 1
+          name: gateway-service
+          ports:
+          - containerPort: 8778
+            name: jolokia
+            protocol: TCP
+          - containerPort: 9091
+            protocol: TCP
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - gateway-service
+        from:
+          kind: ImageStreamTag
+          name: gateway-service:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: gateway-service
+    name: gateway-service
+  spec:
+    ports:
+    - name: jolokia
+      port: 8778
+      protocol: TCP
+      targetPort: 8778
+    - name: 9091-tcp
+      protocol: TCP
+      port: 9091
+      targetPort: 9091
+    selector:
+      app: gateway-service
+      deploymentconfig: gateway-service
+- apiVersion: v1
+  kind: Route
+  metadata:
+    creationTimestamp: null
+    labels:
+      app: gateway-service
+    name: gateway-service
+  spec:
+    host: ${GATEWAY_ROUTE}
+    port:
+      targetPort: 9091-tcp
+    to:
+      kind: Service
+      name: gateway-service
+      weight: 100
+    wildcardPolicy: None
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      app: warehouse-service
+    name: warehouse-service
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: warehouse-service:latest
+    source:
+      contextDir: Warehouse
+      git:
+        uri: ${GIT_URL}
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: fis2-mvn-injected-openshift:latest
+          namespace: ecom-services
+        env:
+          - name: MAVEN_ARGS_APPEND
+            value: '-B'
+      type: Source
+    triggers:
+    - github:
+        secret: MxjIZoWLfY9ySgCEc5mo
+      type: GitHub
+    - generic:
+        secret: 2Qs5dlAL3FQGSlp5huoa
+      type: Generic
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: warehouse-service
+    name: warehouse-service
+  spec:
+    tags:
+    - annotations: null
+      from:
+        kind: DockerImage
+        name: warehouse-service:latest
+      name: latest
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: warehouse-service
+    name: warehouse-service
+  spec:
+    replicas: 1
+    selector:
+      app: warehouse-service
+      deploymentconfig: warehouse-service
+    template:
+      metadata:
+        labels:
+          app: warehouse-service
+          deploymentconfig: warehouse-service
+      spec:
+        containers:
+        - env:
+          - name: ACTIVEMQ_BROKER_PASSWORD
+            value: ${AMQ_PASSWORD}
+          - name: ACTIVEMQ_BROKER_USERNAME
+            value: ${AMQ_USER}
+          - name: ACTIVEMQ_SERVICE_HOST
+            value: broker-amq-tcp
+          - name: ACTIVEMQ_SERVICE_PORT
+            value: "61616"
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            successThreshold: 1
+            httpGet:
+              path: /health
+              port: 8081
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            httpGet:
+              path: /health
+              port: 8081
+            timeoutSeconds: 1
+          name: warehouse-service
+          ports:
+          - containerPort: 8778
+            name: jolokia
+            protocol: TCP
+          - containerPort: 8081
+            name: health
+            protocol: TCP
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - warehouse-service
+        from:
+          kind: ImageStreamTag
+          name: warehouse-service:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: warehouse-service
+    name: warehouse-service
+  spec:
+    ports:
+    - name: jolokia
+      port: 8778
+      protocol: TCP
+      targetPort: 8778
+    - name: health
+      port: 8081
+      protocol: TCP
+      targetPort: 8081
+    selector:
+      app: warehouse-service
+      deploymentconfig: warehouse-service
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      app: admin-service
+    name: admin-service
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: admin-service:latest
+    source:
+      contextDir: Admin
+      git:
+        uri: ${GIT_URL}
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: fis2-mvn-injected-openshift:latest
+          namespace: ecom-services
+        env:
+          - name: MAVEN_ARGS_APPEND
+            value: '-B'
+      type: Source
+    triggers:
+    - github:
+        secret: MxjIZoWLfY9ySgCEc5mo
+      type: GitHub
+    - generic:
+        secret: 2Qs5dlAL3FQGSlp5huoa
+      type: Generic
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: admin-service
+    name: admin-service
+  spec:
+    tags:
+    - annotations: null
+      from:
+        kind: DockerImage
+        name: admin-service:latest
+      name: latest
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: admin-service
+    name: admin-service
+  spec:
+    replicas: 1
+    selector:
+      app: admin-service
+      deploymentconfig: admin-service
+    template:
+      metadata:
+        labels:
+          app: admin-service
+          deploymentconfig: admin-service
+      spec:
+        containers:
+        - env:
+          - name: ACTIVEMQ_BROKER_PASSWORD
+            value: ${AMQ_PASSWORD}
+          - name: ACTIVEMQ_BROKER_USERNAME
+            value: ${AMQ_USER}
+          - name: ACTIVEMQ_SERVICE_HOST
+            value: broker-amq-tcp
+          - name: ACTIVEMQ_SERVICE_PORT
+            value: "61616"
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            successThreshold: 1
+            httpGet:
+              path: /health
+              port: 8081
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            httpGet:
+              path: /health
+              port: 8081
+            timeoutSeconds: 1
+          name: admin-service
+          ports:
+          - containerPort: 8778
+            name: jolokia
+            protocol: TCP
+          - containerPort: 8081
+            name: health
+            protocol: TCP
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - admin-service
+        from:
+          kind: ImageStreamTag
+          name: admin-service:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: admin-service
+    name: admin-service
+  spec:
+    ports:
+    - name: jolokia
+      port: 8778
+      protocol: TCP
+      targetPort: 8778
+    - name: health
+      port: 8081
+      protocol: TCP
+      targetPort: 8081
+    selector:
+      app: admin-service
+      deploymentconfig: admin-service
+parameters:
+  - name: IS_TAG
+    value: latest
+  - name: REGISTRY
+    value: 172.30.37.138
+  - name: IS_PULL_NAMESPACE
+    value: openshift
+  - name: GIT_URL
+    value: https://github.com/jeremyary/fis2-ecom-injected-services.git
+  - name: APPLICATION_NAME
+    description: Application Name
+    value: broker
+  - name: AMQ_USER
+    description: A-MQ Username
+    value: mquser
+  - name: AMQ_PASSWORD
+    description: A-MQ Password
+    value: password
+  - name: MONGO_HOST
+    description: MongoDB Host
+    value: mongodb
+  - name: MONGO_PORT
+    description: MongoDB Host Port
+    value: "27017"
+  - name: MONGO_DB
+    description: MongoDB Collection
+    value: ecom
+  - name: MONGO_USERNAME
+    description: MongoDB Username
+    value: mongouser
+  - name: MONGO_PASSWORD
+    description: MongoDB Password
+    value: password
+  - name: GATEWAY_HOST
+    description: API gateway host
+    value: gateway-service
+  - name: GATEWAY_ROUTE
+    description: route URL for gateway
+    value: ecom.rhmap.ose
+  - name: AMQ_ROUTE
+    description: route URL for A-MQ
+    value: amq.rhmap.ose
+  - name: MONGO_ROUTE
+    description: route URL for mongo
+    value: mongo.rhmap.ose
