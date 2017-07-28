@@ -57,9 +57,9 @@ objects:
           namespace: openshift
         env:
           - name: "GIT_USER"
-            value: "RHsyseng"
+            value: "${GIT_USER}"
           - name: "GIT_PROJECT"
-            value: "FIS2-MSA"
+            value: "${GIT_PROJECT}"
           - name: "GIT_RELEASE"
             value: "1.0"
           - name: "GIT_TARBALL"
@@ -463,7 +463,8 @@ objects:
     source:
       contextDir: Product
       git:
-        uri: ${GIT_URL}
+        uri: https://github.com/${GIT_USER}/${GIT_PROJECT}.git
+        ref: ${GIT_BRANCH}
       type: Git
     strategy:
       sourceStrategy:
@@ -595,7 +596,8 @@ objects:
     source:
       contextDir: Sales
       git:
-        uri: ${GIT_URL}
+        uri: https://github.com/${GIT_USER}/${GIT_PROJECT}.git
+        ref: ${GIT_BRANCH}
       type: Git
     strategy:
       sourceStrategy:
@@ -727,7 +729,8 @@ objects:
     source:
       contextDir: Billing
       git:
-        uri: ${GIT_URL}
+        uri: https://github.com/${GIT_USER}/${GIT_PROJECT}.git
+        ref: ${GIT_BRANCH}
       type: Git
     strategy:
       sourceStrategy:
@@ -859,7 +862,8 @@ objects:
     source:
       contextDir: Gateway
       git:
-        uri: ${GIT_URL}
+        uri: https://github.com/${GIT_USER}/${GIT_PROJECT}.git
+        ref: ${GIT_BRANCH}
       type: Git
     strategy:
       sourceStrategy:
@@ -1004,7 +1008,8 @@ objects:
     source:
       contextDir: Warehouse
       git:
-        uri: ${GIT_URL}
+        uri: https://github.com/${GIT_USER}/${GIT_PROJECT}.git
+        ref: ${GIT_BRANCH}
       type: Git
     strategy:
       sourceStrategy:
@@ -1136,7 +1141,8 @@ objects:
     source:
       contextDir: Admin
       git:
-        uri: ${GIT_URL}
+        uri: https://github.com/${GIT_USER}/${GIT_PROJECT}.git
+        ref: ${GIT_BRANCH}
       type: Git
     strategy:
       sourceStrategy:
@@ -1261,6 +1267,12 @@ parameters:
     value: 172.30.37.138
   - name: IS_PULL_NAMESPACE
     value: openshift
+  - name: GIT_USER
+    value: RHsyseng
+  - name: GIT_PROJECT
+    value: FIS2-MSA
+  - name: GIT_BRANCH
+    value: ecom-svcs
   - name: APPLICATION_NAME
     description: Application Name
     value: broker
