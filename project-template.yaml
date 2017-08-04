@@ -9,67 +9,6 @@ metadata:
   name: ecom-services
 objects:
 - apiVersion: v1
-  kind: ImageStream
-  metadata:
-    annotations: {}
-    labels:
-      app: mvn-base-img
-      group: build
-      project: mvn-base-img
-      version: 1.0.0
-    name: mvn-base-img
-  spec:
-    dockerImageRepository: "${REGISTRY}:5000/${IS_PULL_NAMESPACE}/mvn-base-img"
-    tags:
-    - annotations:
-        tags: "${IS_TAG}"
-      from:
-        kind: ImageStreamTag
-        name: mvn-base-img
-      name: "${IS_TAG}"
-- apiVersion: v1
-  kind: BuildConfig
-  metadata:
-    annotations: {}
-    labels:
-      app: mvn-base-img
-      group: build
-      project: mvn-base-img
-      version: 1.0.0
-    name: mvn-base-img
-  spec:
-    output:
-      to:
-        kind: ImageStreamTag
-        name: mvn-base-img:${IS_TAG}
-    source:
-      git:
-        uri: https://github.com/jeremyary/fis2-mvn-injected-template.git
-      images: []
-      secrets: []
-      type: Git
-    strategy:
-      dockerStrategy:
-        noCache: true
-        from:
-          kind: ImageStreamTag
-          name: fis-java-openshift:2.0
-          namespace: openshift
-        env:
-          - name: "GIT_USER"
-            value: "${GIT_USER}"
-          - name: "GIT_PROJECT"
-            value: "${GIT_PROJECT}"
-          - name: "GIT_RELEASE"
-            value: "1.0"
-          - name: "GIT_TARBALL"
-            value: "fis2-ecom-services.tar.gz"
-        incremental: false
-      type: Docker
-    triggers:
-    - imageChange:
-      type: ImageChange
-- apiVersion: v1
   kind: ServiceAccount
   name: mqserviceaccount
   metadata:
@@ -470,8 +409,8 @@ objects:
       sourceStrategy:
         from:
           kind: ImageStreamTag
-          name: mvn-base-img:latest
-          namespace: ecom-services
+          name: fis-java-openshift:2.0
+          namespace: openshift
         env:
           - name: MAVEN_ARGS_APPEND
             value: '-B'
@@ -603,8 +542,8 @@ objects:
       sourceStrategy:
         from:
           kind: ImageStreamTag
-          name: mvn-base-img:latest
-          namespace: ecom-services
+          name: fis-java-openshift:2.0
+          namespace: openshift
         env:
           - name: MAVEN_ARGS_APPEND
             value: '-B'
@@ -736,8 +675,8 @@ objects:
       sourceStrategy:
         from:
           kind: ImageStreamTag
-          name: mvn-base-img:latest
-          namespace: ecom-services
+          name: fis-java-openshift:2.0
+          namespace: openshift
         env:
           - name: MAVEN_ARGS_APPEND
             value: '-B'
@@ -869,8 +808,8 @@ objects:
       sourceStrategy:
         from:
           kind: ImageStreamTag
-          name: mvn-base-img:latest
-          namespace: ecom-services
+          name: fis-java-openshift:2.0
+          namespace: openshift
         env:
           - name: MAVEN_ARGS_APPEND
             value: '-B'
@@ -1015,8 +954,8 @@ objects:
       sourceStrategy:
         from:
           kind: ImageStreamTag
-          name: mvn-base-img:latest
-          namespace: ecom-services
+          name: fis-java-openshift:2.0
+          namespace: openshift
         env:
           - name: MAVEN_ARGS_APPEND
             value: '-B'
@@ -1148,8 +1087,8 @@ objects:
       sourceStrategy:
         from:
           kind: ImageStreamTag
-          name: mvn-base-img:latest
-          namespace: ecom-services
+          name: fis-java-openshift:2.0
+          namespace: openshift
         env:
           - name: MAVEN_ARGS_APPEND
             value: '-B'

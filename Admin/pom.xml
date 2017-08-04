@@ -37,19 +37,49 @@
     </parent>
 
     <repositories>
-        <!-- explicitly defining central so some build latency is removed on OCP -->
         <repository>
-            <id>localrepository</id>
-            <url>file:///tmp/artifacts/m2</url>
+            <id>jboss-enterprise-maven-repository</id>
+            <url>https://maven.repository.redhat.com/ga/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>jboss-enterprise-ea-maven-repository</id>
+            <url>https://maven.repository.redhat.com/earlyaccess/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
     </repositories>
     <pluginRepositories>
-        <!-- explicitly defining central so some build latency is removed on OCP -->
         <pluginRepository>
-            <id>localrepository</id>
-            <url>file:///tmp/artifacts/m2</url>
+            <id>jboss-enterprise-maven-repository</id>
+            <url>https://maven.repository.redhat.com/ga/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </pluginRepository>
-    </pluginRepositories>
+        <pluginRepository>
+            <id>jboss-enterprise-ea-maven-repository</id>
+            <url>https://maven.repository.redhat.com/earlyaccess/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>>
 
     <dependencyManagement>
         <dependencies>
@@ -64,13 +94,6 @@
     </dependencyManagement>
 
     <dependencies>
-
-        <!-- POGO Models -->
-        <dependency>
-            <groupId>com.redhat.refarch.microservices</groupId>
-            <artifactId>model</artifactId>
-            <version>1.0</version>
-        </dependency>
 
         <!-- Enabling health checks -->
         <dependency>
@@ -120,6 +143,12 @@
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
             <version>2.0.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>1.5.13</version>
         </dependency>
 
         <!-- Groovy -->
