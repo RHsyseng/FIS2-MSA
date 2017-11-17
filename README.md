@@ -5,6 +5,14 @@ extends the functionality of the previous project by utilizing the Red Hat JBoss
 ## Overview
 The primary OpenShift project, fis2-msa, includes nine services, collectively representing an eCommerce service scenario:
 
+This reference architecture takes advantage of the following provided middleware xPaaS container images and templates:
+
+ * [Red Hat JBoss Fuse Integration Services 2.0 for OpenShift Container Platform](https://access.redhat.com/documentation/en-us/red_hat_jboss_middleware_for_openshift/3/html/red_hat_jboss_fuse_integration_services_2.0_for_openshift/)
+ * [Red Hat JBoss Enterprise Application Platform 7 for OpenShift](https://access.redhat.com/documentation/en-us/red_hat_jboss_middleware_for_openshift/3/html/red_hat_jboss_enterprise_application_platform_for_openshift/)
+ * [Red Hat JBoss A-MQ for OpenShift](https://access.redhat.com/documentation/en-us/red_hat_jboss_middleware_for_openshift/3/html/red_hat_jboss_a-mq_for_openshift/)
+ * [EFK Stack Template for Aggregated Container Logs](https://docs.openshift.com/container-platform/3.5/install_config/aggregate_logging.html)
+ * [MySQL Container Image for OpenShift](https://access.redhat.com/documentation/en-us/openshift_container_platform/3.5/html/using_images/database-images#using-images-db-images-mysql)
+
 ### A-MQ (Messaging)
 \[A-MQ deployment] Elastic messaging broker for gateway and event-driven modules
 
